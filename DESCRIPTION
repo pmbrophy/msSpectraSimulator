@@ -1,0 +1,20 @@
+Package: OligoMz
+Type: Package
+Title: Calculate mass spectra from sequence data
+Version: 0.1.0
+Author: Patrick Brophy
+Maintainer: <patrickbrophy2011@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: 
+  data.table, 
+  mzDataTable, 
+  OrgMassSpecR, 
+  IsoSpecR, 
+  SummitR
+Suggests: 
+    testthat
+RoxygenNote: 7.1.1

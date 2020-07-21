@@ -1,0 +1,239 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+
+```
+
+#Short sequence test
+```{r}
+ss <- c("AAA")
+ss_f <- rna_formulaFromSequence(ss)
+charges <- c(1:2)
+
+#calculate m/z of isotopes
+ss_mz <- chargeState_mz(formulaVector = ss_f, chargeStates = charges, abundanceLimit = 0.01)
+
+#Calculate adjusted intensity from charge state model
+ss_cs <- chargeState_distribution(formulaVector = ss_f, chargeStates = charges, mean = 10, sd = 5)
+  
+#CHarge state 1
+mz_1 <- ss_mz[[1]]
+mz_1 <- mz_1[order(mz_1[,"mz"]),]
+mz_1 <- as.data.table(mz_1)
+
+mz_1_cluster <- mzDataTable::indexMasterSpectrum(mzDt = mz_1, ppmTol = 1, isCentroid = TRUE)
+mz_1_cluster <- mz_1_cluster[, intensity := sum(prob), by = mzGrid_index]
+mz_1_cluster <- unique(mz_1_cluster[, .(mzGrid, mzGrid_index, intensity)])
+
+x <- seq(from = floor(min(mz_1_cluster$mzGrid)), to = ceiling(max(mz_1_cluster$mzGrid)), by = 0.01)
+
+res <- 30000
+FWHM <- mz_1_cluster$mzGrid/res
+sigmas <- FWHM/(2*sqrt(2*log(2)))
+
+peaks <- SummitR::multi_gaussian(x = x, 
+                                 mus = mz_1_cluster$mzGrid, 
+                                 probDensity = FALSE, 
+                                 ks = mz_1_cluster$intensity, 
+                                 sigmas = sigmas, 
+                                 returnComponentPks = TRUE)
+
+peaks <- as.data.table(peaks)
+peaks_melt <- melt.data.table(data = peaks, id.vars = c("x", "peak_sum"))
+
+plotly::ggplotly(
+  ggplot()+
+    geom_line(data = peaks, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = peaks_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    geom_linerange(data = mz_1_cluster, 
+                   aes(x = mzGrid, ymin = 0, ymax = intensity))+
+    theme(legend.position = "none")
+  )
+```
+
+#Charge state 2
+```{r}
+mz_2 <- ss_mz[[2]]
+mz_2 <- mz_2[order(mz_2[,"mz"]),]
+mz_2 <- as.data.table(mz_2)
+
+mz_2_cluster <- mzDataTable::indexMasterSpectrum(mzDt = mz_2, ppmTol = 1, isCentroid = TRUE)
+mz_2_cluster <- mz_2_cluster[, intensity := sum(prob), by = mzGrid_index]
+mz_2_cluster <- unique(mz_2_cluster[, .(mzGrid, mzGrid_index, intensity)])
+
+x <- seq(from = floor(min(mz_2_cluster$mzGrid)), to = ceiling(max(mz_2_cluster$mzGrid)), by = 0.01)
+
+res <- 30000
+FWHM <- mz_2_cluster$mzGrid/res
+sigmas <- FWHM/(2*sqrt(2*log(2)))
+
+peaks <- SummitR::multi_gaussian(x = x, 
+                                 mus = mz_2_cluster$mzGrid, 
+                                 probDensity = FALSE, 
+                                 ks = mz_2_cluster$intensity, 
+                                 sigmas = sigmas, 
+                                 returnComponentPks = TRUE)
+
+peaks <- as.data.table(peaks)
+peaks_melt <- melt.data.table(data = peaks, id.vars = c("x", "peak_sum"))
+
+plotly::ggplotly(
+  ggplot()+
+    geom_line(data = peaks, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = peaks_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    geom_linerange(data = mz_2_cluster, 
+                   aes(x = mzGrid, ymin = 0, ymax = intensity))+
+    theme(legend.position = "none")
+  )
+
+```
+
+#Charge state 10
+```{r}
+mz_10 <- ss_mz[[10]]
+mz_10 <- mz_10[order(mz_10[,"mz"]),]
+mz_10 <- as.data.table(mz_10)
+
+mz_10_cluster <- mzDataTable::indexMasterSpectrum(mzDt = mz_10, ppmTol = 1, isCentroid = TRUE)
+mz_10_cluster <- mz_10_cluster[, intensity := sum(prob), by = mzGrid_index]
+mz_10_cluster <- unique(mz_10_cluster[, .(mzGrid, mzGrid_index, intensity)])
+
+x <- seq(from = floor(min(mz_10_cluster$mzGrid)), to = ceiling(max(mz_10_cluster$mzGrid)), by = 0.001)
+
+res <- 30000
+FWHM <- mz_10_cluster$mzGrid/res
+sigmas <- FWHM/(2*sqrt(2*log(2)))
+
+peaks <- SummitR::multi_gaussian(x = x, 
+                                 mus = mz_10_cluster$mzGrid, 
+                                 probDensity = FALSE, 
+                                 ks = mz_10_cluster$intensity, 
+                                 sigmas = sigmas, 
+                                 returnComponentPks = TRUE)
+
+peaks <- as.data.table(peaks)
+peaks_melt <- melt.data.table(data = peaks, id.vars = c("x", "peak_sum"))
+
+plotly::ggplotly(
+  ggplot()+
+    geom_line(data = peaks, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = peaks_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    geom_linerange(data = mz_10_cluster, 
+                   aes(x = mzGrid, ymin = 0, ymax = intensity))+
+    theme(legend.position = "none")
+  )
+
+ggplot()+
+    geom_line(data = peaks, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = peaks_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    geom_linerange(data = mz_10_cluster, 
+                   aes(x = mzGrid, ymin = 0, ymax = intensity))+
+    theme(legend.position = "none")
+```
+
+#CHarge State 10 - charge state distribution
+```{r}
+ss_cs <- as.data.table(ss_cs)
+#ss_cs_10 <- ss_cs[charge == 10,]
+ss_cs_10 <- ss_cs
+ss_cs_10_cluster <- mzDataTable::indexMasterSpectrum(mzDt = ss_cs_10, ppmTol = 1, isCentroid = TRUE)
+
+ss_cs_10_cluster <- ss_cs_10_cluster[, intensity := sum(charge_prob), by = mzGrid_index]
+
+
+ss_cs_10_cluster <- unique(ss_cs_10_cluster[, .(mzGrid, mzGrid_index, intensity)])
+
+ss_cs_10_cluster <- ss_cs_10_cluster[intensity > 1E-4,]
+
+x <- seq(from = floor(min(ss_cs_10_cluster$mzGrid)), to = ceiling(max(ss_cs_10_cluster$mzGrid)), by = 0.001)
+
+res <- 30000
+FWHM <- ss_cs_10_cluster$mzGrid/res
+sigmas <- FWHM/(2*sqrt(2*log(2)))
+
+peaks <- SummitR::multi_gaussian(x = x, 
+                                 mus = ss_cs_10_cluster$mzGrid, 
+                                 probDensity = FALSE, 
+                                 ks = ss_cs_10_cluster$intensity, 
+                                 sigmas = sigmas, 
+                                 returnComponentPks = FALSE)
+
+peaks <- as.data.table(peaks)
+peaks_melt <- melt.data.table(data = peaks, id.vars = c("x", "peak_sum"))
+
+ggplot()+
+    geom_line(data = peaks, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = peaks_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    theme(legend.position = "none")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+spec <- simulateSpectrum(formulaVector = ss_f, 
+                         chargeStates = c(1:2), 
+                         mean = 2, 
+                         sd = 5, 
+                         ppmTol = 1, 
+                         resolution = 30000, 
+                         specAbundMin = 0)
+
+spec <- as.data.table(spec)
+spec_melt <- melt.data.table(data = spec, id.vars = c("x", "peak_sum"))
+
+plotly::ggplotly(
+  ggplot()+
+    geom_line(data = spec, 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = spec_melt[value > 0],
+               aes(x = x, y = value, color = variable)) + 
+    theme(legend.position = "none")
+)
+
+
+ggplot()+
+    geom_line(data = spec[x > 2146 & x < 2149], 
+              aes(x = x, y = peak_sum), 
+              color = "black") +
+    geom_point(data = spec_melt[value > 0 & x > 2146 & x < 2149],
+               aes(x = x, y = value, color = variable)) + 
+    theme(legend.position = "none")
+```
+
+
+
+
+
+
